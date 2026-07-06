@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accesso in corso</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      color: #e2e8f0;
+      text-align: center;
+    }
+    .box {
+      max-width: 420px;
+      padding: 24px;
+    }
+    .small {
+      opacity: 0.7;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box" id="status">
+    Accesso in corso...
+    <div class="small">Attendi qualche secondo</div>
+  </div>
+
+  <script>
+    function getHashParams() {
+      const hash = window.location.hash.substring(1);
+      return new URLSearchParams(hash);
+    }
+
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function setStatus(title, subtitle = "") {
+      document.getElementById("status").innerHTML =
+        title + (subtitle ? `<div class="small">${subtitle}</div>` : "");
+    }
+
+    (function init() {
+      const params = getHashParams();
+
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+
+      if (!accessToken) {
+        setStatus("Accesso non valido", "Manca il token di autenticazione");
+        return;
+      }
+
+      const payload = new URLSearchParams({
+        access_token: accessToken,
+        refresh_token: refreshToken || ""
+      }).toString();
+
+      const mobile = isMobileDevice();
+
+      if (mobile) {
+        setStatus("Reindirizzamento all’app", "Se non succede nulla, apri manualmente l’app");
+
+        setTimeout(() => {
+          window.location.href = "myapp://callback?" + payload;
+        }, 800);
+
+        return;
+      }
+
+      setStatus(
+        "Accesso completato",
+        "Puoi tornare all’app oppure chiudere questa scheda"
+      );
+
+      // opzionale: copia token negli appunti per debug
+      navigator.clipboard?.writeText(accessToken).catch(() => {});
+    })();
+  </script>
+</body>
+</html>
